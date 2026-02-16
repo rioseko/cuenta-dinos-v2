@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Sparkles, BookOpen, Heart, Lightbulb, Play, Square, ArrowRight, ArrowLeft, Volume2 } from 'lucide-react'
+import { Sparkles, BookOpen, Heart, Lightbulb, Play, Square, ArrowRight, ArrowLeft, Volume2, Loader } from 'lucide-react'
 
 const DINOSAURS = [
   { id: 'argentinosaur', name: 'Argentinosaurio', image: '/images/argentinosaurio.png', description: 'El gigante gentil' },
@@ -35,6 +35,7 @@ function App() {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
   const [error, setError] = useState(null)
+  const [loadingMessage, setLoadingMessage] = useState('')
   
   const audioContextRef = useRef(null)
   const currentSourceRef = useRef(null)
@@ -50,6 +51,25 @@ function App() {
     if (continueButtonRef.current) {
       continueButtonRef.current.scrollIntoView({ behavior: 'smooth', block: 'center' })
     }
+  }
+
+  const updateLoadingMessage = () => {
+    const messages = [
+      'Estamos preparando todo...',
+      'Afinando nuestra voz...',
+      'Creando magia prehistórica...',
+      'Despertando a los dinosaurios...',
+      'Preparando el cuento perfecto...',
+      'Casi listo para la aventura...'
+    ]
+    
+    let index = 0
+    const interval = setInterval(() => {
+      setLoadingMessage(messages[index % messages.length])
+      index++
+    }, 3500)
+    
+    return interval
   }
 
   useEffect(() => {
@@ -153,6 +173,10 @@ function App() {
 
       console.log(`Story split into ${chunks.length} paragraphs`)
 
+      // Mostrar spinner y mensajes de carga
+      setLoadingMessage('Estamos preparando todo...')
+      const messageInterval = updateLoadingMessage()
+
       const audioBuffers = []
       const fetchPromises = []
 
@@ -167,11 +191,14 @@ function App() {
         )
       }
 
+      // Esperar a que todos los chunks se carguen
+      await Promise.all(fetchPromises)
+      
+      // Ocultar spinner y limpiar intervalo
+      clearInterval(messageInterval)
+      setLoadingMessage('')
+
       for (let i = 0; i < chunks.length; i++) {
-        if (abortControllerRef.current.signal.aborted) break
-
-        await fetchPromises[i]
-
         if (abortControllerRef.current.signal.aborted) break
 
         const buffer = audioBuffers[i]
@@ -206,6 +233,7 @@ function App() {
         console.error('Audio playback error:', err)
       }
       setIsPlaying(false)
+      setLoadingMessage('') // Ocultar spinner en caso de error
     }
   }
 
@@ -220,6 +248,7 @@ function App() {
       currentSourceRef.current = null
     }
     setIsPlaying(false)
+    setLoadingMessage('') // Ocultar spinner al detener
   }
 
   const resetApp = () => {
@@ -250,6 +279,19 @@ function App() {
             }}
           />
         </header>
+
+        {/* Spinner de carga */}
+        {loadingMessage && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm mx-4 flex flex-col items-center">
+              <div className="animate-pulse mb-4">
+                <Sparkles className="text-emerald-500" size={64} />
+              </div>
+              <p className="text-gray-800 text-center font-medium text-lg">{loadingMessage}</p>
+              <p className="text-gray-500 text-center text-sm mt-2">Preparando tu cuento mágico...</p>
+            </div>
+          </div>
+        )}
 
         {step === 1 && (
           <div className="bg-white rounded-3xl shadow-2xl p-6 md:p-8">
