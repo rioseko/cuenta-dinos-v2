@@ -316,7 +316,7 @@ function App() {
                   }`}
                 >
                   <img src={dino.image} alt={dino.name} className="w-16 h-16 mb-2 mx-auto object-contain" />
-                  <div className="font-semibold text-gray-800 text-sm">{dino.name}</div>
+                  <div className="font-semibold text-gray-800 text-sm leading-tight break-words text-center">{dino.name}</div>
                   <div className="text-xs text-gray-500 mt-1">{dino.description}</div>
                 </button>
               ))}
