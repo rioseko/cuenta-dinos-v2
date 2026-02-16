@@ -44,7 +44,9 @@ function App() {
   const isDebugMode = new URLSearchParams(window.location.search).has('audioDebug')
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' })
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    }, 100)
   }
 
   const scrollToContinueButton = () => {
