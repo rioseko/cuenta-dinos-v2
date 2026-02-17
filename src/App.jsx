@@ -106,6 +106,14 @@ function App() {
       })
 
       if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error('Solicitud no permitida desde este origen')
+        }
+
+        if (response.status === 429) {
+          throw new Error('Demasiadas solicitudes. Inténtalo nuevamente en unos segundos')
+        }
+
         throw new Error('Error al generar el cuento')
       }
 
@@ -134,6 +142,14 @@ function App() {
     })
 
     if (!response.ok) {
+      if (response.status === 403) {
+        throw new Error('Solicitud no permitida desde este origen')
+      }
+
+      if (response.status === 429) {
+        throw new Error('Demasiadas solicitudes de audio. Inténtalo nuevamente en unos segundos')
+      }
+
       throw new Error(`Audio generation failed: ${response.status}`)
     }
 

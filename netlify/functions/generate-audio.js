@@ -1,22 +1,200 @@
+const DEFAULT_ALLOWED_ORIGINS = ['http://localhost:5173', 'http://localhost:8888']
+const AUDIO_RATE_LIMIT_STORE_KEY = '__audioRateLimitStore'
+
+const audioRateLimitStore = globalThis[AUDIO_RATE_LIMIT_STORE_KEY] || new Map()
+globalThis[AUDIO_RATE_LIMIT_STORE_KEY] = audioRateLimitStore
+
+const getHeader = (event, headerName) => {
+  const headers = event.headers || {}
+  return headers[headerName] || headers[headerName.toLowerCase()] || headers[headerName.toUpperCase()] || ''
+}
+
+const normalizeOrigin = (origin) => {
+  if (!origin) return ''
+
+  try {
+    return new URL(origin).origin
+  } catch (_error) {
+    return ''
+  }
+}
+
+const parseAllowedOrigins = (value) => {
+  if (!value) return []
+
+  return value
+    .split(',')
+    .map((item) => normalizeOrigin(item.trim()))
+    .filter(Boolean)
+}
+
+const buildAllowedOrigins = (event) => {
+  const fromEnv = parseAllowedOrigins(process.env.ALLOWED_ORIGINS)
+  const host = getHeader(event, 'x-forwarded-host') || getHeader(event, 'host')
+  const hostOrigins = host ? [normalizeOrigin(`https://${host}`), normalizeOrigin(`http://${host}`)] : []
+  return [...new Set([...DEFAULT_ALLOWED_ORIGINS, ...fromEnv, ...hostOrigins].filter(Boolean))]
+}
+
+const isNetlifyPreviewOrigin = (origin) => {
+  if (!origin) return false
+
+  try {
+    const hostname = new URL(origin).hostname
+    return hostname.endsWith('.netlify.app')
+  } catch (_error) {
+    return false
+  }
+}
+
+const isOriginAllowed = ({ origin, strict, allowPreviews, allowedOrigins }) => {
+  if (!strict) return true
+  if (!origin) return false
+  if (allowedOrigins.includes(origin)) return true
+  if (allowPreviews && isNetlifyPreviewOrigin(origin)) return true
+  return false
+}
+
+const buildJsonHeaders = ({ origin, strict, originAllowed }) => {
+  const headers = { 'Content-Type': 'application/json' }
+
+  if (!strict) {
+    headers['Access-Control-Allow-Origin'] = origin || '*'
+    headers.Vary = 'Origin'
+    return headers
+  }
+
+  if (originAllowed && origin) {
+    headers['Access-Control-Allow-Origin'] = origin
+    headers.Vary = 'Origin'
+  }
+
+  return headers
+}
+
+const buildAudioHeaders = ({ origin, strict, originAllowed }) => {
+  const headers = {
+    'Content-Type': 'audio/mpeg',
+    'Cache-Control': 'public, max-age=3600'
+  }
+
+  if (!strict) {
+    headers['Access-Control-Allow-Origin'] = origin || '*'
+    headers.Vary = 'Origin'
+    return headers
+  }
+
+  if (originAllowed && origin) {
+    headers['Access-Control-Allow-Origin'] = origin
+    headers.Vary = 'Origin'
+  }
+
+  return headers
+}
+
+const getClientIp = (event) => {
+  const forwardedFor = getHeader(event, 'x-forwarded-for')
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0].trim()
+  }
+
+  return getHeader(event, 'client-ip') || 'unknown'
+}
+
+const checkRateLimit = ({ store, key, limit, windowMs }) => {
+  const now = Date.now()
+  const current = store.get(key)
+
+  if (!current || now > current.resetAt) {
+    const next = { count: 1, resetAt: now + windowMs }
+    store.set(key, next)
+    return { allowed: true, remaining: limit - 1, retryAfterSeconds: Math.ceil(windowMs / 1000) }
+  }
+
+  if (current.count >= limit) {
+    return {
+      allowed: false,
+      remaining: 0,
+      retryAfterSeconds: Math.max(1, Math.ceil((current.resetAt - now) / 1000))
+    }
+  }
+
+  current.count += 1
+  return { allowed: true, remaining: Math.max(0, limit - current.count), retryAfterSeconds: 0 }
+}
+
 export const handler = async (event) => {
+  const strictSecurity = process.env.SECURITY_STRICT === 'true'
+  const allowNetlifyPreviews = process.env.ALLOW_NETLIFY_PREVIEWS !== 'false'
+  const requestOrigin = normalizeOrigin(getHeader(event, 'origin'))
+  const allowedOrigins = buildAllowedOrigins(event)
+  const originAllowed = isOriginAllowed({
+    origin: requestOrigin,
+    strict: strictSecurity,
+    allowPreviews: allowNetlifyPreviews,
+    allowedOrigins
+  })
+
+  const jsonHeaders = buildJsonHeaders({
+    origin: requestOrigin,
+    strict: strictSecurity,
+    originAllowed
+  })
+
+  if (event.httpMethod === 'OPTIONS') {
+    return {
+      statusCode: 204,
+      headers: {
+        ...jsonHeaders,
+        'Access-Control-Allow-Methods': 'POST, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type'
+      },
+      body: ''
+    }
+  }
+
+  if (strictSecurity && !originAllowed) {
+    return {
+      statusCode: 403,
+      headers: jsonHeaders,
+      body: JSON.stringify({ error: 'Forbidden origin' })
+    }
+  }
+
   if (event.httpMethod !== 'POST') {
     return {
       statusCode: 405,
+      headers: jsonHeaders,
       body: JSON.stringify({ error: 'Method not allowed' })
     }
   }
 
+  const maxRequestsPerMinute = Number.parseInt(process.env.RATE_LIMIT_AUDIO_PER_MIN || '20', 10)
+  const rateLimit = checkRateLimit({
+    store: audioRateLimitStore,
+    key: getClientIp(event),
+    limit: Number.isFinite(maxRequestsPerMinute) ? maxRequestsPerMinute : 20,
+    windowMs: 60 * 1000
+  })
+
+  if (!rateLimit.allowed) {
+    return {
+      statusCode: 429,
+      headers: {
+        ...jsonHeaders,
+        'Retry-After': String(rateLimit.retryAfterSeconds)
+      },
+      body: JSON.stringify({ error: 'Too many requests' })
+    }
+  }
+
   try {
-    const { text } = JSON.parse(event.body)
+    const { text } = JSON.parse(event.body || '{}')
     const format = event.queryStringParameters?.format || 'json'
 
     if (!text || text.trim().length === 0) {
       return {
         statusCode: 400,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        },
+        headers: jsonHeaders,
         body: JSON.stringify({ error: 'Text is required' })
       }
     }
@@ -25,17 +203,8 @@ export const handler = async (event) => {
       console.error('Missing CLARIFAI_API_KEY environment variable')
       return {
         statusCode: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        },
-        body: JSON.stringify({ 
-          error: 'Configuration Error',
-          details: 'Missing Clarifai API key. Please check environment variables.',
-          missing: {
-            CLARIFAI_API_KEY: !process.env.CLARIFAI_API_KEY
-          }
-        })
+        headers: jsonHeaders,
+        body: JSON.stringify({ error: 'Service unavailable' })
       }
     }
 
@@ -86,17 +255,9 @@ export const handler = async (event) => {
       })
 
       return {
-        statusCode: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        },
-        body: JSON.stringify({ 
-          error: 'Clarifai API Error',
-          details: `HTTP ${clarifaiResponse.status}: ${clarifaiResponse.statusText}`,
-          clarifaiError: errorDetails,
-          url: clarifaiUrl
-        })
+        statusCode: 502,
+        headers: jsonHeaders,
+        body: JSON.stringify({ error: 'Upstream service error' })
       }
     }
 
@@ -105,16 +266,9 @@ export const handler = async (event) => {
     if (!clarifaiData.outputs || !clarifaiData.outputs[0] || !clarifaiData.outputs[0].data || !clarifaiData.outputs[0].data.audio) {
       console.error('Unexpected Clarifai response structure:', JSON.stringify(clarifaiData, null, 2))
       return {
-        statusCode: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        },
-        body: JSON.stringify({ 
-          error: 'Invalid Clarifai Response',
-          details: 'The response structure from Clarifai was unexpected',
-          response: clarifaiData
-        })
+        statusCode: 502,
+        headers: jsonHeaders,
+        body: JSON.stringify({ error: 'Invalid upstream response' })
       }
     }
 
@@ -123,16 +277,9 @@ export const handler = async (event) => {
     if (!audioBase64) {
       console.error('No audio base64 in response:', clarifaiData)
       return {
-        statusCode: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        },
-        body: JSON.stringify({ 
-          error: 'No Audio Data',
-          details: 'Clarifai response did not contain audio base64 data',
-          response: clarifaiData
-        })
+        statusCode: 502,
+        headers: jsonHeaders,
+        body: JSON.stringify({ error: 'No audio data available' })
       }
     }
 
@@ -141,11 +288,11 @@ export const handler = async (event) => {
     if (format === 'binary') {
       return {
         statusCode: 200,
-        headers: {
-          'Content-Type': 'audio/mpeg',
-          'Access-Control-Allow-Origin': '*',
-          'Cache-Control': 'public, max-age=3600'
-        },
+        headers: buildAudioHeaders({
+          origin: requestOrigin,
+          strict: strictSecurity,
+          originAllowed
+        }),
         body: audioBase64,
         isBase64Encoded: true
       }
@@ -156,10 +303,7 @@ export const handler = async (event) => {
     if (audioSizeKB > 5000) {
       return {
         statusCode: 413,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        },
+        headers: jsonHeaders,
         body: JSON.stringify({ 
           error: 'Payload Too Large',
           message: 'Audio file exceeds size limit. Please use chunk mode.',
@@ -170,10 +314,7 @@ export const handler = async (event) => {
 
     return {
       statusCode: 200,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
+      headers: jsonHeaders,
       body: JSON.stringify({
         audioBase64: audioBase64,
         audioUrl: `data:audio/mpeg;base64,${audioBase64}`
@@ -183,15 +324,8 @@ export const handler = async (event) => {
     console.error('Error in generate-audio:', error)
     return {
       statusCode: 500,
-      headers: {
-        'Content-Type': 'application/json',
-        'Access-Control-Allow-Origin': '*'
-      },
-      body: JSON.stringify({ 
-        error: 'Error generating audio',
-        details: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      })
+      headers: jsonHeaders,
+      body: JSON.stringify({ error: 'Error generating audio' })
     }
   }
 }

@@ -239,9 +239,40 @@ Las imágenes de dinosaurios deben estar en formato PNG con fondo transparente y
 
 ## 🔒 Seguridad
 
+El proyecto incluye múltiples capas de seguridad para proteger las APIs y controlar el acceso:
+
+### Protección de API Keys
 - Las API keys nunca se exponen al frontend
 - Todas las llamadas a APIs externas se hacen desde Netlify Functions
 - Las variables de entorno están protegidas en el servidor
+
+### Control de Acceso
+- **Validación de Origen (CORS)**: Configurable para restringir solicitudes a dominios autorizados
+- **Rate Limiting**: Límites de solicitudes por IP para prevenir abuso
+- **Sanitización de Errores**: Respuestas genéricas para evitar fuga de información interna
+
+### Variables de Entorno de Seguridad
+Puedes configurar el comportamiento de seguridad con las siguientes variables:
+
+```env
+# Activar modo estricto de seguridad (default: false)
+SECURITY_STRICT=true
+
+# Orígenes permitidos (separados por comas)
+ALLOWED_ORIGINS=https://tu-dominio.com,https://www.tu-dominio.com
+
+# Permitir deploy previews de Netlify (default: true)
+ALLOW_NETLIFY_PREVIEWS=true
+
+# Rate limiting por IP (solicitudes por minuto)
+RATE_LIMIT_STORY_PER_MIN=10
+RATE_LIMIT_AUDIO_PER_MIN=20
+```
+
+### Recomendaciones de Deploy
+1. **Desarrollo**: Usa `SECURITY_STRICT=false` o no definas la variable
+2. **Producción**: Activa `SECURITY_STRICT=true` con tus dominios configurados
+3. **Previews**: Mantén `ALLOW_NETLIFY_PREVIEWS=true` para que funcionen los deploy previews
 
 ## 📝 Licencia
 
