@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Sparkles, BookOpen, Heart, Lightbulb, Play, Square, ArrowRight, ArrowLeft, Volume2, Loader } from 'lucide-react'
+import { Sparkles, BookOpen, Heart, Lightbulb, Play, Square, ArrowRight, ArrowLeft, Volume2, Loader, Star, Gift } from 'lucide-react'
 
 const DINOSAURS = [
   { id: 'argentinosaur', name: 'Argentinosaurio', image: '/images/argentinosaurio.png', description: 'El gigante gentil' },
@@ -20,10 +20,11 @@ const STYLES = [
 ]
 
 const LESSONS = [
-  { id: 'sharing', name: 'Compartir', icon: Heart, description: 'La importancia de compartir' },
-  { id: 'courage', name: 'Valentía', icon: Sparkles, description: 'Ser valiente ante los miedos' },
+  { id: 'overcome-shyness', name: 'Vencer la timidez', icon: Sparkles, description: 'Aprender a expresarse y hacer amigos', badge: 'Nuevo' },
+  { id: 'sharing', name: 'Compartir', icon: Gift, description: 'La importancia de compartir' },
+  { id: 'courage', name: 'Valentía', icon: Star, description: 'Ser valiente ante los miedos' },
   { id: 'kindness', name: 'Amabilidad', icon: Heart, description: 'Ser amable con los demás' },
-  { id: 'perseverance', name: 'Perseverancia', icon: Lightbulb, description: 'No rendirse nunca' }
+  { id: 'perseverance', name: 'Perseverancia', icon: Lightbulb, description: 'No rendirse nunca' },
 ]
 
 function App() {
@@ -105,19 +106,26 @@ function App() {
         })
       })
 
+      let data = null
+
+      try {
+        data = await response.json()
+      } catch (_error) {
+        data = null
+      }
+
       if (!response.ok) {
         if (response.status === 403) {
-          throw new Error('Solicitud no permitida desde este origen')
+          throw new Error(data?.error || 'Solicitud no permitida desde este origen')
         }
 
         if (response.status === 429) {
-          throw new Error('Demasiadas solicitudes. Inténtalo nuevamente en unos segundos')
+          throw new Error(data?.error || 'Demasiadas solicitudes. Inténtalo nuevamente en unos segundos')
         }
 
-        throw new Error('Error al generar el cuento')
+        throw new Error(data?.error || 'Error al generar el cuento')
       }
 
-      const data = await response.json()
       setStory(data.story)
       setStep(5)
     } catch (err) {
@@ -435,8 +443,15 @@ function App() {
                     }`}
                   >
                     <Icon className="text-emerald-500" size={32} />
-                    <div className="text-left">
-                      <div className="font-semibold text-gray-800">{lesson.name}</div>
+                    <div className="text-left flex-1">
+                      <div className="font-semibold text-gray-800 flex items-center gap-2">
+                        {lesson.name}
+                        {lesson.badge && (
+                          <span className="bg-red-500 text-white text-xs px-2 py-1 rounded-full font-semibold">
+                            {lesson.badge}
+                          </span>
+                        )}
+                      </div>
                       <div className="text-sm text-gray-500">{lesson.description}</div>
                     </div>
                   </button>

@@ -61,6 +61,14 @@ CLARIFAI_API_KEY=tu_clave_real_aqui
 CLARIFAI_USER_ID=tu_user_id_aqui
 CLARIFAI_APP_ID=tu_app_id_aqui
 CLARIFAI_MODEL_ID=GPT-4
+
+# Opcional: Configuración de voz ElevenLabs
+ELEVENLABS_VOICE_ID=SOYHLrjzK2X1ezoPC6cr
+ELEVENLABS_MODEL_ID=eleven_multilingual_v2
+ELEVENLABS_STABILITY=0.5
+ELEVENLABS_SIMILARITY_BOOST=0.5
+ELEVENLABS_STYLE=0
+ELEVENLABS_USE_SPEAKER_BOOST=true
 ```
 
 ### Obtener las credenciales de Clarifai:
@@ -71,6 +79,33 @@ CLARIFAI_MODEL_ID=GPT-4
 4. Tu User ID y App ID están en la URL de tu aplicación
 
 **Nota:** Clarifai proporciona acceso tanto a modelos de texto (GPT-4) como a text-to-speech (ElevenLabs) con una sola API key. No necesitas una cuenta separada de ElevenLabs.
+
+### Configuración de Voz ElevenLabs
+
+Puedes personalizar la voz usada para narrar los cuentos mediante variables de entorno:
+
+```env
+# ID de la voz (por defecto: SOYHLrjzK2X1ezoPC6cr - Adam)
+ELEVENLABS_VOICE_ID=SOYHLrjzK2X1ezoPC6cr
+
+# Modelo de voz (por defecto: eleven_multilingual_v2)
+ELEVENLABS_MODEL_ID=eleven_multilingual_v2
+
+# Ajustes de voz (0.0 - 1.0)
+ELEVENLABS_STABILITY=0.5          # Estabilidad de la voz
+ELEVENLABS_SIMILARITY_BOOST=0.5  # Similitud con la voz original
+ELEVENLABS_STYLE=0               # Exageración del estilo
+ELEVENLABS_USE_SPEAKER_BOOST=true # Mejora de claridad
+```
+
+#### Voces Recomendadas en Español
+
+- **Adam**: `SOYHLrjzK2X1ezoPC6cr` (Masculina, natural)
+- **Sarah**: `pNInz6obpgDQGcFmaJgB` (Femenina, cálida)
+- **Matilda**: `XrExE9yKIg1WjnnlVkGX` (Femenina, profesional)
+- **Will**: `onwK4e9ZLuTAKqWW03F9` (Masculina, narrador)
+
+Para obtener más voces, consulta la [API de ElevenLabs](https://api.elevenlabs.io/v1/voices).
 
 ## 🏃 Desarrollo Local
 
@@ -127,7 +162,9 @@ Los archivos compilados estarán en la carpeta `dist/`.
    - `CLARIFAI_API_KEY`
    - `CLARIFAI_USER_ID`
    - `CLARIFAI_APP_ID`
-   - `ELEVENLABS_API_KEY`
+   - `ELEVENLABS_VOICE_ID` (opcional)
+   - `ELEVENLABS_MODEL_ID` (opcional)
+   - Otras variables de ElevenLabs si se desea personalizar la voz
 7. Click en "Deploy site"
 
 ### Opción 2: Deployment Manual
@@ -145,7 +182,7 @@ No olvides configurar las variables de entorno en el dashboard de Netlify.
 
 1. **Selecciona un dinosaurio**: Elige entre Argentinosaurio, Carnotaurus, Estegosaurio, Mosasaurio, Pterodáctilo, Espinosaurio, T-Rex, Triceratops o Velociraptor (con imágenes personalizadas)
 2. **Elige el estilo**: Aventura, Amistad o Misterio
-3. **Selecciona una lección**: Compartir, Valentía, Amabilidad o Perseverancia
+3. **Selecciona una lección**: Compartir, Valentía, Amabilidad, Perseverancia o Vencer la timidez
 4. **Espera la generación**: La IA creará un cuento único
 5. **Escucha la narración**: Presiona "Leer cuento" para escuchar la historia con voz realista y pausas naturales
 6. **Crea más cuentos**: Usa el botón "Crear otro cuento" para generar nuevas historias

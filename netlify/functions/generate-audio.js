@@ -211,12 +211,38 @@ export const handler = async (event) => {
     const userId = 'eleven-labs'
     const appId = 'audio-generation'
     const modelId = 'speech-synthesis'
-    const versionId = 'f2cead3a965f4c419a61a4a9b501095c'
+    const elevenLabsVoiceId = process.env.ELEVENLABS_VOICE_ID || 'onwK4e9ZLuTAKqWW03F9'
+    const elevenLabsModelId = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2'
+    const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY || ''
+    const elevenLabsStability = Number.parseFloat(process.env.ELEVENLABS_STABILITY || '0.5')
+    const elevenLabsSimilarityBoost = Number.parseFloat(process.env.ELEVENLABS_SIMILARITY_BOOST || '0.5')
+    const elevenLabsStyle = Number.parseFloat(process.env.ELEVENLABS_STYLE || '0')
+    const elevenLabsUseSpeakerBoost = process.env.ELEVENLABS_USE_SPEAKER_BOOST !== 'false'
+    const inferenceParams = {
+      'voice-id': elevenLabsVoiceId,
+      model_id: elevenLabsModelId,
+      stability: Number.isFinite(elevenLabsStability) ? elevenLabsStability : 0.5,
+      similarity_boost: Number.isFinite(elevenLabsSimilarityBoost) ? elevenLabsSimilarityBoost : 0.5,
+      style: Number.isFinite(elevenLabsStyle) ? elevenLabsStyle : 0,
+      use_speaker_boost: elevenLabsUseSpeakerBoost
+    }
+
+    if (elevenLabsApiKey) {
+      inferenceParams.api_key = elevenLabsApiKey
+    }
     
-    const clarifaiUrl = `https://api.clarifai.com/v2/users/${userId}/apps/${appId}/models/${modelId}/versions/${versionId}/outputs`
+    const clarifaiUrl = `https://api.clarifai.com/v2/users/${userId}/apps/${appId}/models/${modelId}/outputs`
     
     console.log('Calling Clarifai (ElevenLabs) API:', clarifaiUrl)
     console.log('Text length:', text.length, 'chars')
+    console.log('ElevenLabs voice config:', {
+      voiceId: elevenLabsVoiceId,
+      modelId: elevenLabsModelId,
+      stability: inferenceParams.stability,
+      similarityBoost: inferenceParams.similarity_boost,
+      style: inferenceParams.style,
+      useSpeakerBoost: inferenceParams.use_speaker_boost
+    })
 
     const clarifaiResponse = await fetch(clarifaiUrl, {
       method: 'POST',
@@ -229,6 +255,13 @@ export const handler = async (event) => {
         user_app_id: { 
           user_id: userId, 
           app_id: appId 
+        },
+        model: {
+          model_version: {
+            output_info: {
+              params: inferenceParams
+            }
+          }
         },
         inputs: [{
           data: {
@@ -257,7 +290,10 @@ export const handler = async (event) => {
       return {
         statusCode: 502,
         headers: jsonHeaders,
-        body: JSON.stringify({ error: 'Upstream service error' })
+        body: JSON.stringify({
+          error: 'Upstream service error',
+          details: errorDetails
+        })
       }
     }
 
