@@ -35,13 +35,17 @@ function App() {
   const [story, setStory] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false)
+  const [generatedImageUrl, setGeneratedImageUrl] = useState('')
   const [error, setError] = useState(null)
   const [loadingMessage, setLoadingMessage] = useState('')
+  const [imageLoadingMessage, setImageLoadingMessage] = useState('')
   
   const audioContextRef = useRef(null)
   const currentSourceRef = useRef(null)
   const abortControllerRef = useRef(null)
   const continueButtonRef = useRef(null)
+  const generatedImageRef = useRef(null)
   const isDebugMode = new URLSearchParams(window.location.search).has('audioDebug')
 
   const scrollToTop = () => {
@@ -74,6 +78,35 @@ function App() {
     
     return interval
   }
+
+  const updateImageLoadingMessage = () => {
+    const messages = [
+      'Pintando una escena jurásica...',
+      'Dando color al cuento...',
+      'Ilustrando a tu dinosaurio...',
+      'Creando una imagen mágica...',
+      'Añadiendo detalles prehistóricos...',
+      'Casi lista tu ilustración...'
+    ]
+
+    let index = 0
+    setImageLoadingMessage(messages[0])
+
+    const interval = setInterval(() => {
+      index++
+      setImageLoadingMessage(messages[index % messages.length])
+    }, 3500)
+
+    return interval
+  }
+
+  useEffect(() => {
+    if (generatedImageUrl && generatedImageRef.current) {
+      setTimeout(() => {
+        generatedImageRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 150)
+    }
+  }, [generatedImageUrl])
 
   useEffect(() => {
     return () => {
@@ -127,6 +160,7 @@ function App() {
       }
 
       setStory(data.story)
+      setGeneratedImageUrl('')
       setStep(5)
     } catch (err) {
       setError(err.message)
@@ -163,6 +197,51 @@ function App() {
 
     const arrayBuffer = await response.arrayBuffer()
     return arrayBuffer
+  }
+
+  const generateImage = async () => {
+    if (!story) return
+
+    setIsGeneratingImage(true)
+    setError(null)
+    const messageInterval = updateImageLoadingMessage()
+
+    try {
+      const response = await fetch('/.netlify/functions/generate-image', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ story })
+      })
+
+      let data = null
+
+      try {
+        data = await response.json()
+      } catch (_error) {
+        data = null
+      }
+
+      if (!response.ok) {
+        if (response.status === 403) {
+          throw new Error(data?.error || 'Solicitud no permitida desde este origen')
+        }
+
+        if (response.status === 429) {
+          throw new Error(data?.error || 'Demasiadas solicitudes de imagen. Inténtalo nuevamente en unos segundos')
+        }
+
+        throw new Error(data?.error || 'Error al generar la imagen')
+      }
+
+      setGeneratedImageUrl(data?.imageUrl || '')
+    } catch (err) {
+      setError(err.message)
+      console.error('Error generating image:', err)
+    } finally {
+      clearInterval(messageInterval)
+      setImageLoadingMessage('')
+      setIsGeneratingImage(false)
+    }
   }
 
   const playChunksSequence = async () => {
@@ -284,6 +363,7 @@ function App() {
     setSelectedStyle(null)
     setSelectedLesson(null)
     setStory('')
+    setGeneratedImageUrl('')
     setError(null)
   }
 
@@ -315,6 +395,18 @@ function App() {
               </div>
               <p className="text-gray-800 text-center font-medium text-lg">{loadingMessage}</p>
               <p className="text-gray-500 text-center text-sm mt-2">Preparando tu cuento mágico...</p>
+            </div>
+          </div>
+        )}
+
+        {imageLoadingMessage && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white rounded-3xl shadow-2xl p-8 max-w-sm mx-4 flex flex-col items-center">
+              <div className="animate-pulse mb-4">
+                <Sparkles className="text-violet-500" size={64} />
+              </div>
+              <p className="text-gray-800 text-center font-medium text-lg">{imageLoadingMessage}</p>
+              <p className="text-gray-500 text-center text-sm mt-2">Estamos ilustrando tu cuento...</p>
             </div>
           </div>
         )}
@@ -516,7 +608,7 @@ function App() {
               
               <button
                 onClick={playChunksSequence}
-                disabled={isGenerating}
+                disabled={isGenerating || isGeneratingImage}
                 className={`w-full py-4 font-semibold rounded-2xl shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-2 ${
                   isPlaying
                     ? 'bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white'
@@ -535,11 +627,43 @@ function App() {
                   </>
                 )}
               </button>
+
+              <button
+                onClick={generateImage}
+                disabled={isGenerating || isGeneratingImage}
+                className={`w-full mt-3 py-4 font-semibold rounded-2xl shadow-md hover:shadow-lg transition-all hover:scale-[1.02] flex items-center justify-center gap-2 ${
+                  isGeneratingImage
+                    ? 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white'
+                }`}
+              >
+                {isGeneratingImage ? (
+                  <>
+                    <Loader size={20} className="animate-spin" />
+                    Generando imagen...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles size={20} />
+                    Generar imagen
+                  </>
+                )}
+              </button>
             </div>
             
             <div className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 mb-6 border-l-4 border-emerald-600">
               <p className="text-gray-700 leading-relaxed whitespace-pre-wrap">{story}</p>
             </div>
+
+            {generatedImageUrl && (
+              <div ref={generatedImageRef} className="mb-6 rounded-2xl overflow-hidden border border-violet-100 shadow-md bg-violet-50">
+                <img
+                  src={generatedImageUrl}
+                  alt="Ilustración generada a partir del cuento"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
+            )}
 
             <button
               onClick={() => {
