@@ -412,14 +412,14 @@ function App() {
                 key={dino.id}
                 type="button"
                 onClick={() => setSelectedDino(dino)}
-                className={`choice-card min-h-[184px] text-left ${selectedDino?.id === dino.id ? 'choice-card-active' : ''}`}
+                className={`choice-card min-h-[208px] text-left ${selectedDino?.id === dino.id ? 'choice-card-active' : ''}`}
               >
-                <div className="mb-4 flex justify-between">
-                  <div className="rounded-2xl bg-white/80 p-2 shadow-soft">
-                    <img src={dino.image} alt={dino.name} className="h-16 w-16 object-contain" />
+                <div className="relative mb-4 flex justify-center">
+                  <div className="flex h-28 w-full max-w-[9rem] items-center justify-center rounded-[1.75rem] bg-white/85 p-3 shadow-soft">
+                    <img src={dino.image} alt={dino.name} className="h-24 w-24 object-contain" />
                   </div>
                   {selectedDino?.id === dino.id && (
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
+                    <span className="absolute right-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
                       <Check size={16} />
                     </span>
                   )}
