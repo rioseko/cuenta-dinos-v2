@@ -49,10 +49,6 @@ const CREATION_STEPS = [
   { id: 4, label: 'Crear', title: 'Estamos armando el cuento', description: 'La historia se genera con tus elecciones.' }
 ]
 
-const scrollToTop = () => {
-  window.scrollTo({ top: 0, behavior: 'smooth' })
-}
-
 function StepProgress({ step }) {
   const currentStep = Math.min(step, 4)
 
@@ -148,6 +144,9 @@ function App() {
   const audioContextRef = useRef(null)
   const currentSourceRef = useRef(null)
   const abortControllerRef = useRef(null)
+  const stepsViewportRef = useRef(null)
+  const resultCardRef = useRef(null)
+  const hasMountedRef = useRef(false)
   const isDebugMode = new URLSearchParams(window.location.search).has('audioDebug')
 
   useEffect(() => {
@@ -170,9 +169,32 @@ function App() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!hasMountedRef.current) {
+      hasMountedRef.current = true
+      return
+    }
+
+    if (step === 1) {
+      return
+    }
+
+    const target = step === 5 ? resultCardRef.current : stepsViewportRef.current
+
+    if (!target) {
+      return
+    }
+
+    requestAnimationFrame(() => {
+      target.scrollIntoView({
+        behavior: 'smooth',
+        block: step === 5 ? 'start' : 'start'
+      })
+    })
+  }, [step])
+
   const goToStep = (nextStep) => {
     setStep(nextStep)
-    scrollToTop()
   }
 
   const updateLoadingMessage = () => {
@@ -556,7 +578,7 @@ function App() {
     }
 
     return (
-      <div className="section-card fade-up">
+      <div ref={resultCardRef} className="section-card fade-up">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Listo</p>
@@ -691,7 +713,7 @@ function App() {
           </div>
         </section>
 
-        <div className="mt-4">
+        <div ref={stepsViewportRef} className="mt-4">
           <StepProgress step={step} />
         </div>
 
