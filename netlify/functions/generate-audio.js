@@ -211,7 +211,7 @@ export const handler = async (event) => {
     const userId = 'eleven-labs'
     const appId = 'audio-generation'
     const modelId = 'speech-synthesis'
-    const elevenLabsVoiceId = process.env.ELEVENLABS_VOICE_ID || 'onwK4e9ZLuTAKqWW03F9'
+    const elevenLabsVoiceId = process.env.ELEVENLABS_VOICE_ID || 'XrExE9yKIg1WjnnlVkGX'
     const elevenLabsModelId = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2'
     const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY || ''
     const elevenLabsStability = Number.parseFloat(process.env.ELEVENLABS_STABILITY || '0.5')
