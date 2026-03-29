@@ -263,7 +263,19 @@ function App() {
 
   const splitTextIntoChunks = (text) => {
     const paragraphs = text.split(/\n\n+/).filter((paragraph) => paragraph.trim().length > 0)
-    return paragraphs.map((paragraph) => paragraph.trim())
+    const chunks = paragraphs.map((paragraph) => paragraph.trim())
+    
+    // ElevenLabs free tier only allows 2 concurrent requests
+    // Group into max 2 chunks for sequential/semi-parallel fetching
+    if (chunks.length <= 2) {
+      return chunks
+    }
+    
+    const midpoint = Math.ceil(chunks.length / 2)
+    return [
+      chunks.slice(0, midpoint).join('\n\n'),
+      chunks.slice(midpoint).join('\n\n')
+    ]
   }
 
   const fetchAudioChunk = async (text, signal) => {
@@ -342,32 +354,14 @@ function App() {
       setLoadingMessage('Estamos preparando todo...')
       const messageInterval = updateLoadingMessage()
 
-      const audioBuffers = []
-      const fetchPromises = []
+      // Playback helper - plays a buffer and returns when done
+      const playBuffer = (buffer) => {
+        return new Promise((resolve, reject) => {
+          if (abortControllerRef.current.signal.aborted) {
+            reject(new Error('Playback aborted'))
+            return
+          }
 
-      for (let index = 0; index < chunks.length; index += 1) {
-        fetchPromises.push(
-          fetchAudioChunk(chunks[index], abortControllerRef.current.signal)
-            .then((audioData) => ctx.decodeAudioData(audioData))
-            .then((buffer) => {
-              audioBuffers[index] = buffer
-            })
-        )
-      }
-
-      await Promise.all(fetchPromises)
-
-      clearInterval(messageInterval)
-      setLoadingMessage('')
-
-      for (let index = 0; index < chunks.length; index += 1) {
-        if (abortControllerRef.current.signal.aborted) {
-          break
-        }
-
-        const buffer = audioBuffers[index]
-
-        await new Promise((resolve, reject) => {
           const source = ctx.createBufferSource()
           source.buffer = buffer
           source.connect(ctx.destination)
@@ -375,7 +369,8 @@ function App() {
 
           source.onended = () => {
             currentSourceRef.current = null
-            setTimeout(resolve, 1000)
+            // Small pause between chunks
+            setTimeout(resolve, 500)
           }
 
           abortControllerRef.current.signal.addEventListener('abort', () => {
@@ -389,6 +384,44 @@ function App() {
 
           source.start(0)
         })
+      }
+
+      // Fetch and decode helper
+      const fetchAndDecode = async (chunkIndex) => {
+        const audioData = await fetchAudioChunk(chunks[chunkIndex], abortControllerRef.current.signal)
+        return ctx.decodeAudioData(audioData)
+      }
+
+      // With max 2 chunks, we use sequential fetch with immediate playback:
+      // 1. Fetch chunk 0 → start playing immediately
+      // 2. While playing chunk 0, fetch chunk 1 in background
+      // 3. When chunk 0 ends, play chunk 1 (if ready) or wait for it
+
+      const audioBuffers = []
+      
+      if (chunks.length >= 1) {
+        // Fetch first chunk
+        audioBuffers[0] = await fetchAndDecode(0)
+      }
+
+      // Start playing first chunk immediately
+      clearInterval(messageInterval)
+      setLoadingMessage('')
+
+      if (chunks.length >= 1) {
+        await playBuffer(audioBuffers[0])
+      }
+
+      // If aborted, stop here
+      if (abortControllerRef.current.signal.aborted) {
+        setIsPlaying(false)
+        return
+      }
+
+      // Fetch remaining chunks if any (should only be 1 more max with our split logic)
+      if (chunks.length >= 2) {
+        audioBuffers[1] = await fetchAndDecode(1)
+        await playBuffer(audioBuffers[1])
       }
 
       setIsPlaying(false)

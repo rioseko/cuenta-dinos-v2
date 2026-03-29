@@ -199,8 +199,8 @@ export const handler = async (event) => {
       }
     }
 
-    if (!process.env.CLARIFAI_API_KEY) {
-      console.error('Missing CLARIFAI_API_KEY environment variable')
+    if (!process.env.ELEVENLABS_API_KEY) {
+      console.error('Missing ELEVENLABS_API_KEY environment variable')
       return {
         statusCode: 500,
         headers: jsonHeaders,
@@ -208,82 +208,56 @@ export const handler = async (event) => {
       }
     }
 
-    const userId = 'eleven-labs'
-    const appId = 'audio-generation'
-    const modelId = 'speech-synthesis'
-    const elevenLabsVoiceId = process.env.ELEVENLABS_VOICE_ID || 'XrExE9yKIg1WjnnlVkGX'
-    const elevenLabsModelId = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2'
-    const elevenLabsApiKey = process.env.ELEVENLABS_API_KEY || ''
-    const elevenLabsStability = Number.parseFloat(process.env.ELEVENLABS_STABILITY || '0.5')
-    const elevenLabsSimilarityBoost = Number.parseFloat(process.env.ELEVENLABS_SIMILARITY_BOOST || '0.5')
-    const elevenLabsStyle = Number.parseFloat(process.env.ELEVENLABS_STYLE || '0')
-    const elevenLabsUseSpeakerBoost = process.env.ELEVENLABS_USE_SPEAKER_BOOST !== 'false'
-    const inferenceParams = {
-      'voice-id': elevenLabsVoiceId,
-      model_id: elevenLabsModelId,
-      stability: Number.isFinite(elevenLabsStability) ? elevenLabsStability : 0.5,
-      similarity_boost: Number.isFinite(elevenLabsSimilarityBoost) ? elevenLabsSimilarityBoost : 0.5,
-      style: Number.isFinite(elevenLabsStyle) ? elevenLabsStyle : 0,
-      use_speaker_boost: elevenLabsUseSpeakerBoost
-    }
-
-    if (elevenLabsApiKey) {
-      inferenceParams.api_key = elevenLabsApiKey
-    }
+    const voiceId = process.env.ELEVENLABS_VOICE_ID || 'SOYHLrjzK2X1ezoPC6cr'
+    const modelId = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2'
+    const stability = Number.parseFloat(process.env.ELEVENLABS_STABILITY || '0.5')
+    const similarityBoost = Number.parseFloat(process.env.ELEVENLABS_SIMILARITY_BOOST || '0.5')
+    const style = Number.parseFloat(process.env.ELEVENLABS_STYLE || '0')
+    const useSpeakerBoost = process.env.ELEVENLABS_USE_SPEAKER_BOOST !== 'false'
     
-    const clarifaiUrl = `https://api.clarifai.com/v2/users/${userId}/apps/${appId}/models/${modelId}/outputs`
+    const elevenLabsUrl = `https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`
     
-    console.log('Calling Clarifai (ElevenLabs) API:', clarifaiUrl)
+    console.log('Calling ElevenLabs API:', elevenLabsUrl)
     console.log('Text length:', text.length, 'chars')
-    console.log('ElevenLabs voice config:', {
-      voiceId: elevenLabsVoiceId,
-      modelId: elevenLabsModelId,
-      stability: inferenceParams.stability,
-      similarityBoost: inferenceParams.similarity_boost,
-      style: inferenceParams.style,
-      useSpeakerBoost: inferenceParams.use_speaker_boost
+    console.log('Voice config:', {
+      voiceId,
+      modelId,
+      stability,
+      similarityBoost,
+      style,
+      useSpeakerBoost
     })
 
-    const clarifaiResponse = await fetch(clarifaiUrl, {
+    const audioResponse = await fetch(elevenLabsUrl, {
       method: 'POST',
       headers: {
-        'Accept': 'application/json',
-        'Authorization': `Key ${process.env.CLARIFAI_API_KEY}`,
-        'Content-Type': 'application/json'
+        'Accept': 'audio/mpeg',
+        'Content-Type': 'application/json',
+        'xi-api-key': process.env.ELEVENLABS_API_KEY
       },
       body: JSON.stringify({
-        user_app_id: { 
-          user_id: userId, 
-          app_id: appId 
-        },
-        model: {
-          model_version: {
-            output_info: {
-              params: inferenceParams
-            }
-          }
-        },
-        inputs: [{
-          data: {
-            text: { 
-              raw: text 
-            }
-          }
-        }]
+        text: text,
+        model_id: modelId,
+        voice_settings: {
+          stability: Number.isFinite(stability) ? stability : 0.5,
+          similarity_boost: Number.isFinite(similarityBoost) ? similarityBoost : 0.5,
+          style: Number.isFinite(style) ? style : 0,
+          use_speaker_boost: useSpeakerBoost
+        }
       })
     })
 
-    if (!clarifaiResponse.ok) {
+    if (!audioResponse.ok) {
       let errorDetails
       try {
-        errorDetails = await clarifaiResponse.json()
+        errorDetails = await audioResponse.json()
       } catch (e) {
-        errorDetails = await clarifaiResponse.text()
+        errorDetails = await audioResponse.text()
       }
       
-      console.error('Clarifai (ElevenLabs) API error:', {
-        status: clarifaiResponse.status,
-        statusText: clarifaiResponse.statusText,
+      console.error('ElevenLabs API error:', {
+        status: audioResponse.status,
+        statusText: audioResponse.statusText,
         details: errorDetails
       })
 
@@ -297,21 +271,11 @@ export const handler = async (event) => {
       }
     }
 
-    const clarifaiData = await clarifaiResponse.json()
-    
-    if (!clarifaiData.outputs || !clarifaiData.outputs[0] || !clarifaiData.outputs[0].data || !clarifaiData.outputs[0].data.audio) {
-      console.error('Unexpected Clarifai response structure:', JSON.stringify(clarifaiData, null, 2))
-      return {
-        statusCode: 502,
-        headers: jsonHeaders,
-        body: JSON.stringify({ error: 'Invalid upstream response' })
-      }
-    }
-
-    const audioBase64 = clarifaiData.outputs[0].data.audio.base64
+    const audioBuffer = await audioResponse.arrayBuffer()
+    const audioBase64 = Buffer.from(audioBuffer).toString('base64')
     
     if (!audioBase64) {
-      console.error('No audio base64 in response:', clarifaiData)
+      console.error('No audio data available')
       return {
         statusCode: 502,
         headers: jsonHeaders,
