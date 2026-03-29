@@ -208,7 +208,7 @@ export const handler = async (event) => {
       }
     }
 
-    const voiceId = process.env.ELEVENLABS_VOICE_ID || 'SOYHLrjzK2X1ezoPC6cr'
+    const voiceId = process.env.ELEVENLABS_VOICE_ID || 'XrExE9yKIg1WjnnlVkGX'
     const modelId = process.env.ELEVENLABS_MODEL_ID || 'eleven_multilingual_v2'
     const stability = Number.parseFloat(process.env.ELEVENLABS_STABILITY || '0.5')
     const similarityBoost = Number.parseFloat(process.env.ELEVENLABS_SIMILARITY_BOOST || '0.5')

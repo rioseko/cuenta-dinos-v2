@@ -354,7 +354,13 @@ function App() {
       setLoadingMessage('Estamos preparando todo...')
       const messageInterval = updateLoadingMessage()
 
-      // Playback helper - plays a buffer and returns when done
+      // Fetch and decode helper
+      const fetchAndDecode = async (chunkIndex) => {
+        const audioData = await fetchAudioChunk(chunks[chunkIndex], abortControllerRef.current.signal)
+        return ctx.decodeAudioData(audioData)
+      }
+
+      // Playback helper - returns Promise that resolves when done
       const playBuffer = (buffer) => {
         return new Promise((resolve, reject) => {
           if (abortControllerRef.current.signal.aborted) {
@@ -369,15 +375,14 @@ function App() {
 
           source.onended = () => {
             currentSourceRef.current = null
-            // Small pause between chunks
-            setTimeout(resolve, 500)
+            resolve()
           }
 
           abortControllerRef.current.signal.addEventListener('abort', () => {
             try {
               source.stop()
             } catch (_error) {
-              // Ignored: the source may have already stopped.
+              // Ignored
             }
             reject(new Error('Playback aborted'))
           })
@@ -386,31 +391,27 @@ function App() {
         })
       }
 
-      // Fetch and decode helper
-      const fetchAndDecode = async (chunkIndex) => {
-        const audioData = await fetchAudioChunk(chunks[chunkIndex], abortControllerRef.current.signal)
-        return ctx.decodeAudioData(audioData)
-      }
+      // Overlap fetch + playback strategy:
+      // 1. Fetch first chunk → play immediately
+      // 2. Start fetching second chunk WHILE first is playing
+      // 3. When first ends, play second immediately (should be ready)
 
-      // With max 2 chunks, we use sequential fetch with immediate playback:
-      // 1. Fetch chunk 0 → start playing immediately
-      // 2. While playing chunk 0, fetch chunk 1 in background
-      // 3. When chunk 0 ends, play chunk 1 (if ready) or wait for it
-
-      const audioBuffers = []
+      const audioBuffers = [null, null]
       
-      if (chunks.length >= 1) {
-        // Fetch first chunk
-        audioBuffers[0] = await fetchAndDecode(0)
-      }
+      // Fetch first chunk
+      audioBuffers[0] = await fetchAndDecode(0)
 
       // Start playing first chunk immediately
       clearInterval(messageInterval)
       setLoadingMessage('')
 
-      if (chunks.length >= 1) {
-        await playBuffer(audioBuffers[0])
+      // Start fetching second chunk in background while we play first
+      let secondChunkPromise = null
+      if (chunks.length >= 2) {
+        secondChunkPromise = fetchAndDecode(1)
       }
+
+      await playBuffer(audioBuffers[0])
 
       // If aborted, stop here
       if (abortControllerRef.current.signal.aborted) {
@@ -418,9 +419,9 @@ function App() {
         return
       }
 
-      // Fetch remaining chunks if any (should only be 1 more max with our split logic)
+      // Play second chunk (should be ready or almost ready)
       if (chunks.length >= 2) {
-        audioBuffers[1] = await fetchAndDecode(1)
+        audioBuffers[1] = await secondChunkPromise
         await playBuffer(audioBuffers[1])
       }
 
