@@ -476,12 +476,12 @@ function App() {
                     <img src={dino.image} alt={`Ilustracion de ${dino.name}, ${dino.description}`} className="h-24 w-24 object-contain" loading="lazy" />
                   </div>
                   {selectedDino?.id === dino.id && (
-                    <span className="absolute right-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" role="status" aria-label="Seleccionado">
+                    <span className="absolute right-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--tint-emerald)] text-emerald-700 dark:text-emerald-300" role="status" aria-label="Seleccionado">
                       <Check size={16} aria-hidden="true" />
                     </span>
                   )}
                 </div>
-                <p className="text-base font-bold text-slate-900 dark:text-slate-100">{dino.name}</p>
+                <p className="text-base font-semibold text-slate-900 dark:text-slate-100">{dino.name}</p>
                 <p className="mt-1 text-sm leading-normal text-slate-600 dark:text-slate-400">{dino.description}</p>
               </button>
             ))}
@@ -518,11 +518,11 @@ function App() {
                     <Icon size={22} aria-hidden="true" />
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="text-base font-bold text-slate-900 dark:text-slate-100">{style.name}</p>
+                    <p className="text-base font-semibold text-slate-900 dark:text-slate-100">{style.name}</p>
                     <p className="mt-1 text-sm leading-normal text-slate-600 dark:text-slate-400">{style.description}</p>
                   </div>
                   {selectedStyle?.id === style.id && (
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" role="status" aria-label="Seleccionado">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--tint-emerald)] text-emerald-700 dark:text-emerald-300" role="status" aria-label="Seleccionado">
                       <Check size={16} aria-hidden="true" />
                     </span>
                   )}
@@ -563,13 +563,13 @@ function App() {
                   </div>
                   <div className="flex-1 text-left">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-base font-bold text-slate-900 dark:text-slate-100">{lesson.name}</p>
+                      <p className="text-base font-semibold text-slate-900 dark:text-slate-100">{lesson.name}</p>
                       {lesson.badge && <span className="soft-badge">{lesson.badge}</span>}
                     </div>
                     <p className="mt-1 text-sm leading-normal text-slate-600 dark:text-slate-400">{lesson.description}</p>
                   </div>
                   {selectedLesson?.id === lesson.id && (
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" role="status" aria-label="Seleccionado">
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--tint-emerald)] text-emerald-700 dark:text-emerald-300" role="status" aria-label="Seleccionado">
                       <Check size={16} aria-hidden="true" />
                     </span>
                   )}
@@ -584,8 +584,8 @@ function App() {
     if (step === 4) {
       return (
         <div className="section-card fade-up text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] bg-sky-100 shadow-soft dark:bg-sky-900/50">
-            <Wand2 className="animate-gentle-float text-sky-700 dark:text-sky-300" size={34} aria-hidden="true" />
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] bg-[var(--tint-sky)] shadow-soft dark:bg-[var(--tint-sky)]">
+            <Wand2 className="animate-gentle-float text-slate-600 dark:text-slate-300" size={34} aria-hidden="true" />
           </div>
           <p className="mt-6 text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-400">Paso 4</p>
           <h3 className="mt-2 text-3xl font-heading text-slate-900 dark:text-slate-100">Creando el cuento perfecto</h3>
@@ -595,17 +595,17 @@ function App() {
           </p>
 
           <div className="mx-auto mt-8 grid max-w-md grid-cols-3 gap-3 text-left">
-            <div className="rounded-3xl bg-sky-50 p-4 dark:bg-sky-900/30">
+            <div className="rounded-3xl bg-[var(--tint-sky)] p-4">
               <p className="text-xs uppercase tracking-widest text-slate-600 dark:text-slate-400">Dino</p>
-              <p className="mt-2 text-sm font-bold text-slate-800 dark:text-slate-200">{selectedDino?.name}</p>
+              <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">{selectedDino?.name}</p>
             </div>
-            <div className="rounded-3xl bg-rose-50 p-4 dark:bg-rose-900/30">
+            <div className="rounded-3xl bg-[var(--tint-rose)] p-4">
               <p className="text-xs uppercase tracking-widest text-slate-600 dark:text-slate-400">Estilo</p>
-              <p className="mt-2 text-sm font-bold text-slate-800 dark:text-slate-200">{selectedStyle?.name}</p>
+              <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">{selectedStyle?.name}</p>
             </div>
-            <div className="rounded-3xl bg-amber-50 p-4 dark:bg-amber-900/30">
+            <div className="rounded-3xl bg-[var(--tint-amber)] p-4">
               <p className="text-xs uppercase tracking-widest text-slate-600 dark:text-slate-400">Lección</p>
-              <p className="mt-2 text-sm font-bold text-slate-800 dark:text-slate-200">{selectedLesson?.name}</p>
+              <p className="mt-2 text-sm font-semibold text-slate-700 dark:text-slate-200">{selectedLesson?.name}</p>
             </div>
           </div>
 
@@ -624,7 +624,7 @@ function App() {
               Puedes leerlo en pantalla o reproducir la narración con una voz más suave para el momento de dormir.
             </p>
           </div>
-          <div className="inline-flex items-center gap-2 self-start rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">
+          <div className="inline-flex items-center gap-2 self-start rounded-full bg-[var(--tint-emerald)] px-4 py-2 text-sm font-semibold text-emerald-700 dark:text-emerald-300">
             <MoonStar size={16} aria-hidden="true" />
             Experiencia tranquila
           </div>
