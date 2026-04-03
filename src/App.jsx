@@ -481,7 +481,7 @@ function App() {
                     </span>
                   )}
                 </div>
-                <p className="text-base font-semibold text-slate-900 dark:text-slate-100">{dino.name}</p>
+                <p className="text-base font-semibold text-slate-900 dark:text-slate-100 break-words">{dino.name}</p>
                 <p className="mt-1 text-sm leading-normal text-slate-600 dark:text-slate-400">{dino.description}</p>
               </button>
             ))}
