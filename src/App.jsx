@@ -21,11 +21,13 @@ const DINOSAURS = [
   { id: 'carnotaurus', name: 'Carnotaurus', image: '/images/carnotaurus.png', description: 'El curioso con cuernos' },
   { id: 'stegosaurus', name: 'Estegosaurio', image: '/images/estegosaurio.png', description: 'El de placas brillantes' },
   { id: 'mosasaurus', name: 'Mosasaurio', image: '/images/mosasaurus.png', description: 'El aventurero del mar' },
-  { id: 'pterodactyl', name: 'Pterodáctilo', image: '/images/pterodactilo.png', description: 'El viajero que vuela' },
+  { id: 'pterodactyl', name: 'Pteranodon', image: '/images/pteranodon.png', description: 'El viajero que vuela' },
   { id: 'spinosaurus', name: 'Espinosaurio', image: '/images/spinosaurus.png', description: 'El nadador valiente' },
   { id: 'trex', name: 'T-Rex', image: '/images/t-rex.png', description: 'El rey de las pisadas' },
   { id: 'triceratops', name: 'Triceratops', image: '/images/triceratops.png', description: 'El de tres cuernos' },
-  { id: 'velociraptor', name: 'Velociraptor', image: '/images/velociraptor.png', description: 'El más rápido de todos' }
+  { id: 'velociraptor', name: 'Velociraptor', image: '/images/velociraptor.png', description: 'El más rápido de todos' },
+  { id: 'quetzalcoatlus', name: 'Quetzalcoatlus', image: '/images/quetzalcoatlus.png', description: 'El señor de los cielos', badge: 'Nuevo' },
+  { id: 'ankylosaurus', name: 'Anquilosaurio', image: '/images/ankylosaurus.png', description: 'El blindado impenetrable', badge: 'Nuevo' }
 ]
 
 const STYLES = [
@@ -462,14 +464,14 @@ function App() {
             title="¿Qué dinosaurio será el protagonista?"
           />
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {DINOSAURS.map((dino) => (
               <button
                 key={dino.id}
                 type="button"
                 onClick={() => setSelectedDino(dino)}
                 aria-pressed={selectedDino?.id === dino.id}
-                className={`choice-card min-h-[208px] text-left ${selectedDino?.id === dino.id ? 'choice-card-active' : ''}`}
+                className={`choice-card min-h-[208px] text-center ${selectedDino?.id === dino.id ? 'choice-card-active' : ''}`}
               >
                 <div className="relative mb-4 flex justify-center">
                   <div className="flex h-28 w-full max-w-[9rem] items-center justify-center rounded-[1.75rem] bg-white/85 p-3 shadow-soft dark:bg-slate-800/85">
@@ -481,8 +483,11 @@ function App() {
                     </span>
                   )}
                 </div>
-                <p className="text-base font-semibold text-slate-900 dark:text-slate-100 break-words">{dino.name}</p>
-                <p className="mt-1 text-sm leading-normal text-slate-600 dark:text-slate-400">{dino.description}</p>
+                <div className="flex flex-wrap items-center justify-center gap-2">
+                  <p className="text-xl sm:text-base font-semibold text-slate-900 dark:text-slate-100">{dino.name}</p>
+                  {dino.badge && <span className="soft-badge">{dino.badge}</span>}
+                </div>
+                <p className="mt-1 text-base sm:text-sm leading-normal text-slate-600 dark:text-slate-400">{dino.description}</p>
               </button>
             ))}
           </div>
