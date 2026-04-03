@@ -616,7 +616,7 @@ function App() {
 
     return (
       <div ref={resultCardRef} className="section-card fade-up">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-400">Listo</p>
             <h3 className="mt-1 text-3xl font-heading text-slate-900 dark:text-slate-100">Tu cuento ya está listo</h3>
