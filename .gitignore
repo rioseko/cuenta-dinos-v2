@@ -30,3 +30,9 @@ dist-ssr
 
 # Netlify
 .netlify
+
+#ai
+.claude
+.agents
+skills-lock.json
+AGENTS.md

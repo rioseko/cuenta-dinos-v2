@@ -56,10 +56,10 @@ function StepProgress({ step }) {
     <div className="section-card fade-up">
       <div className="mb-4 flex items-center justify-between gap-3">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Progreso</p>
-          <h2 className="mt-1 text-lg font-heading text-slate-900">Crea un cuento en pocos pasos</h2>
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-400">Progreso</p>
+          <h2 className="mt-1 text-lg font-heading text-slate-900 dark:text-slate-100">Crea un cuento en pocos pasos</h2>
         </div>
-        <div className="rounded-full bg-white/80 px-3 py-1 text-sm font-semibold text-slate-700 shadow-soft">
+        <div className="rounded-full bg-white/80 px-3 py-1 text-sm font-semibold text-slate-700 shadow-soft dark:bg-slate-800/80 dark:text-slate-300">
           Paso {currentStep} de 4
         </div>
       </div>
@@ -74,16 +74,16 @@ function StepProgress({ step }) {
               <div
                 className={`flex h-11 w-11 items-center justify-center rounded-2xl border transition-all ${
                   isComplete
-                    ? 'border-emerald-200 bg-emerald-100 text-emerald-700'
+                    ? 'border-emerald-200 bg-emerald-100 text-emerald-700 dark:border-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-400'
                     : isCurrent
-                      ? 'border-sky-200 bg-sky-100 text-sky-700 shadow-soft'
-                      : 'border-white/70 bg-white/70 text-slate-400'
+                      ? 'border-sky-200 bg-sky-100 text-sky-700 shadow-soft dark:border-sky-800 dark:bg-sky-900/50 dark:text-sky-400'
+                      : 'border-white/70 bg-white/70 text-slate-400 dark:border-slate-700 dark:bg-slate-800/70 dark:text-slate-500'
                 }`}
               >
-                {isComplete ? <Check size={18} /> : <span className="text-sm font-bold">{item.id}</span>}
+                {isComplete ? <Check size={18} aria-hidden="true" /> : <span className="text-sm font-bold">{item.id}</span>}
               </div>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">{item.label}</p>
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-400">{item.label}</p>
               </div>
             </div>
           )
@@ -96,13 +96,13 @@ function StepProgress({ step }) {
 function SectionIntro({ icon: Icon, eyebrow, title, description }) {
   return (
     <div className="mb-6 flex items-start gap-4">
-      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-soft">
-        <Icon size={22} />
+      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-sky-600 shadow-soft dark:bg-slate-800 dark:text-sky-400">
+        <Icon size={22} aria-hidden="true" />
       </div>
       <div>
-        <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">{eyebrow}</p>
-        <h3 className="mt-1 text-2xl font-heading text-slate-900">{title}</h3>
-        <p className="mt-2 text-sm leading-6 text-slate-600">{description}</p>
+        <p className="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-400">{eyebrow}</p>
+        <h3 className="mt-1 text-2xl font-heading text-slate-900 dark:text-slate-100">{title}</h3>
+        <p className="mt-2 text-base leading-relaxed text-slate-600 dark:text-slate-400">{description}</p>
       </div>
     </div>
   )
@@ -122,7 +122,7 @@ function SelectionSummary({ selectedDino, selectedStyle, selectedLesson }) {
   return (
     <div className="mb-6 flex flex-wrap gap-2">
       {items.map((item) => (
-        <span key={item} className="pill-badge">
+        <span key={item} className="pill-badge" role="status">
           {item}
         </span>
       ))}
@@ -468,20 +468,21 @@ function App() {
                 key={dino.id}
                 type="button"
                 onClick={() => setSelectedDino(dino)}
+                aria-pressed={selectedDino?.id === dino.id}
                 className={`choice-card min-h-[208px] text-left ${selectedDino?.id === dino.id ? 'choice-card-active' : ''}`}
               >
                 <div className="relative mb-4 flex justify-center">
-                  <div className="flex h-28 w-full max-w-[9rem] items-center justify-center rounded-[1.75rem] bg-white/85 p-3 shadow-soft">
-                    <img src={dino.image} alt={dino.name} className="h-24 w-24 object-contain" />
+                  <div className="flex h-28 w-full max-w-[9rem] items-center justify-center rounded-[1.75rem] bg-white/85 p-3 shadow-soft dark:bg-slate-800/85">
+                    <img src={dino.image} alt={`Ilustracion de ${dino.name}, ${dino.description}`} className="h-24 w-24 object-contain" loading="lazy" />
                   </div>
                   {selectedDino?.id === dino.id && (
-                    <span className="absolute right-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                      <Check size={16} />
+                    <span className="absolute right-0 top-0 inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" role="status" aria-label="Seleccionado">
+                      <Check size={16} aria-hidden="true" />
                     </span>
                   )}
                 </div>
-                <p className="text-base font-bold text-slate-900">{dino.name}</p>
-                <p className="mt-1 text-sm leading-5 text-slate-600">{dino.description}</p>
+                <p className="text-base font-bold text-slate-900 dark:text-slate-100">{dino.name}</p>
+                <p className="mt-1 text-sm leading-normal text-slate-600 dark:text-slate-400">{dino.description}</p>
               </button>
             ))}
           </div>
@@ -510,18 +511,19 @@ function App() {
                   key={style.id}
                   type="button"
                   onClick={() => setSelectedStyle(style)}
+                  aria-pressed={selectedStyle?.id === style.id}
                   className={`choice-row ${selectedStyle?.id === style.id ? 'choice-card-active' : ''}`}
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-rose-500 shadow-soft">
-                    <Icon size={22} />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-rose-500 shadow-soft dark:bg-slate-800 dark:text-rose-400">
+                    <Icon size={22} aria-hidden="true" />
                   </div>
                   <div className="flex-1 text-left">
-                    <p className="text-base font-bold text-slate-900">{style.name}</p>
-                    <p className="mt-1 text-sm leading-5 text-slate-600">{style.description}</p>
+                    <p className="text-base font-bold text-slate-900 dark:text-slate-100">{style.name}</p>
+                    <p className="mt-1 text-sm leading-normal text-slate-600 dark:text-slate-400">{style.description}</p>
                   </div>
                   {selectedStyle?.id === style.id && (
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                      <Check size={16} />
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" role="status" aria-label="Seleccionado">
+                      <Check size={16} aria-hidden="true" />
                     </span>
                   )}
                 </button>
@@ -553,21 +555,22 @@ function App() {
                   key={lesson.id}
                   type="button"
                   onClick={() => setSelectedLesson(lesson)}
+                  aria-pressed={selectedLesson?.id === lesson.id}
                   className={`choice-row ${selectedLesson?.id === lesson.id ? 'choice-card-active' : ''}`}
                 >
-                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-amber-500 shadow-soft">
-                    <Icon size={22} />
+                  <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-white text-amber-500 shadow-soft dark:bg-slate-800 dark:text-amber-400">
+                    <Icon size={22} aria-hidden="true" />
                   </div>
                   <div className="flex-1 text-left">
                     <div className="flex flex-wrap items-center gap-2">
-                      <p className="text-base font-bold text-slate-900">{lesson.name}</p>
+                      <p className="text-base font-bold text-slate-900 dark:text-slate-100">{lesson.name}</p>
                       {lesson.badge && <span className="soft-badge">{lesson.badge}</span>}
                     </div>
-                    <p className="mt-1 text-sm leading-5 text-slate-600">{lesson.description}</p>
+                    <p className="mt-1 text-sm leading-normal text-slate-600 dark:text-slate-400">{lesson.description}</p>
                   </div>
                   {selectedLesson?.id === lesson.id && (
-                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700">
-                      <Check size={16} />
+                    <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400" role="status" aria-label="Seleccionado">
+                      <Check size={16} aria-hidden="true" />
                     </span>
                   )}
                 </button>
@@ -581,32 +584,32 @@ function App() {
     if (step === 4) {
       return (
         <div className="section-card fade-up text-center">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] bg-gradient-to-br from-sky-100 via-rose-50 to-amber-100 shadow-soft">
-            <Wand2 className="animate-gentle-float text-sky-700" size={34} />
+          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] bg-sky-100 shadow-soft dark:bg-sky-900/50">
+            <Wand2 className="animate-gentle-float text-sky-700 dark:text-sky-300" size={34} aria-hidden="true" />
           </div>
-          <p className="mt-6 text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Paso 4</p>
-          <h3 className="mt-2 text-3xl font-heading text-slate-900">Creando el cuento perfecto</h3>
-          <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-slate-600">
+          <p className="mt-6 text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-400">Paso 4</p>
+          <h3 className="mt-2 text-3xl font-heading text-slate-900 dark:text-slate-100">Creando el cuento perfecto</h3>
+          <p className="mx-auto mt-3 max-w-md text-base leading-relaxed text-slate-600 dark:text-slate-400">
             {selectedDino?.name} está preparando una historia de {selectedStyle?.name.toLowerCase()} con una lección sobre{' '}
             {selectedLesson?.name.toLowerCase()}.
           </p>
 
           <div className="mx-auto mt-8 grid max-w-md grid-cols-3 gap-3 text-left">
-            <div className="rounded-3xl bg-sky-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Dino</p>
-              <p className="mt-2 text-sm font-bold text-slate-800">{selectedDino?.name}</p>
+            <div className="rounded-3xl bg-sky-50 p-4 dark:bg-sky-900/30">
+              <p className="text-xs uppercase tracking-widest text-slate-600 dark:text-slate-400">Dino</p>
+              <p className="mt-2 text-sm font-bold text-slate-800 dark:text-slate-200">{selectedDino?.name}</p>
             </div>
-            <div className="rounded-3xl bg-rose-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Estilo</p>
-              <p className="mt-2 text-sm font-bold text-slate-800">{selectedStyle?.name}</p>
+            <div className="rounded-3xl bg-rose-50 p-4 dark:bg-rose-900/30">
+              <p className="text-xs uppercase tracking-widest text-slate-600 dark:text-slate-400">Estilo</p>
+              <p className="mt-2 text-sm font-bold text-slate-800 dark:text-slate-200">{selectedStyle?.name}</p>
             </div>
-            <div className="rounded-3xl bg-amber-50 p-4">
-              <p className="text-xs uppercase tracking-[0.2em] text-slate-500">Lección</p>
-              <p className="mt-2 text-sm font-bold text-slate-800">{selectedLesson?.name}</p>
+            <div className="rounded-3xl bg-amber-50 p-4 dark:bg-amber-900/30">
+              <p className="text-xs uppercase tracking-widest text-slate-600 dark:text-slate-400">Lección</p>
+              <p className="mt-2 text-sm font-bold text-slate-800 dark:text-slate-200">{selectedLesson?.name}</p>
             </div>
           </div>
 
-          {error && <div className="error-banner mx-auto mt-6 max-w-md">{error}</div>}
+          {error && <div className="error-banner mx-auto mt-6 max-w-md" role="alert">{error}</div>}
         </div>
       )
     }
@@ -615,14 +618,14 @@ function App() {
       <div ref={resultCardRef} className="section-card fade-up">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.25em] text-slate-500">Listo</p>
-            <h3 className="mt-1 text-3xl font-heading text-slate-900">Tu cuento ya está listo</h3>
-            <p className="mt-2 text-sm leading-6 text-slate-600">
+            <p className="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-400">Listo</p>
+            <h3 className="mt-1 text-3xl font-heading text-slate-900 dark:text-slate-100">Tu cuento ya está listo</h3>
+            <p className="mt-2 text-base leading-relaxed text-slate-600 dark:text-slate-400">
               Puedes leerlo en pantalla o reproducir la narración con una voz más suave para el momento de dormir.
             </p>
           </div>
-          <div className="inline-flex items-center gap-2 self-start rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">
-            <MoonStar size={16} />
+          <div className="inline-flex items-center gap-2 self-start rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700 dark:bg-emerald-900/50 dark:text-emerald-400">
+            <MoonStar size={16} aria-hidden="true" />
             Experiencia tranquila
           </div>
         </div>
@@ -634,39 +637,40 @@ function App() {
             type="button"
             onClick={playChunksSequence}
             disabled={isGenerating}
+            aria-busy={isGenerating}
             className={`primary-button ${isPlaying ? 'primary-button-stop' : ''}`}
           >
             {isPlaying ? (
               <>
-                <Square size={18} />
+                <Square size={18} aria-hidden="true" />
                 Detener narración
               </>
             ) : (
               <>
-                <Volume2 size={18} />
+                <Volume2 size={18} aria-hidden="true" />
                 Reproducir cuento
               </>
             )}
           </button>
 
           <div className="story-paper">
-            <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-500">
-              <BookOpen size={16} />
-              Lectura del cuento
+            <div className="mb-4 flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-400">
+              <BookOpen size={16} aria-hidden="true" />
+              <span>Lectura del cuento</span>
             </div>
-            <p className="whitespace-pre-wrap text-[15px] leading-8 text-slate-700">{story}</p>
+            <p className="whitespace-pre-wrap text-base leading-relaxed text-slate-700 dark:text-slate-300">{story}</p>
           </div>
 
           <button type="button" onClick={resetApp} className="secondary-button">
-            <Play size={18} />
+            <Play size={18} aria-hidden="true" />
             Crear otro cuento
           </button>
         </div>
 
-        {error && <div className="error-banner mt-4">{error}</div>}
+        {error && <div className="error-banner mt-4" role="alert">{error}</div>}
 
         {isDebugMode && (
-          <div className="mt-4 rounded-3xl bg-slate-100 p-4 text-xs text-slate-600">
+          <div className="mt-4 rounded-3xl bg-slate-100 p-4 text-xs text-slate-600 dark:bg-slate-800 dark:text-slate-400">
             <div>AudioContext State: {audioContextRef.current?.state || 'not initialized'}</div>
             <div>Playing: {isPlaying ? 'Yes' : 'No'}</div>
             <div>Story Length: {story.length} chars</div>
@@ -682,12 +686,12 @@ function App() {
     }
 
     return (
-      <div className="mobile-action-bar">
+      <nav className="mobile-action-bar" aria-label="Navegación de pasos">
         <div className="mx-auto flex max-w-2xl items-center gap-3">
           {step > 1 && (
             <button type="button" onClick={() => goToStep(step - 1)} className="secondary-button compact-button">
-              <ArrowLeft size={18} />
-              Atrás
+              <ArrowLeft size={18} aria-hidden="true" />
+              <span>Atrás</span>
             </button>
           )}
 
@@ -711,36 +715,32 @@ function App() {
             className="primary-button flex-1"
           >
             {step === 3 ? 'Crear cuento' : 'Continuar'}
-            {step === 3 ? <Sparkles size={18} /> : <ArrowRight size={18} />}
+            {step === 3 ? <Sparkles size={18} aria-hidden="true" /> : <ArrowRight size={18} aria-hidden="true" />}
           </button>
         </div>
-      </div>
+      </nav>
     )
   }
 
   return (
     <div className={`app-shell ${step < 4 ? 'pb-32' : 'pb-10'}`}>
-      <div className="floating-orb floating-orb-left" />
-      <div className="floating-orb floating-orb-right" />
-
       <main className="relative mx-auto flex min-h-screen w-full max-w-2xl flex-col px-4 pt-4 sm:px-5 sm:pt-6">
         <section className="hero-card fade-up">
           <div className="flex flex-col gap-6">
             <div className="grid items-center gap-5 sm:grid-cols-[1.15fr_0.85fr]">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.32em] text-slate-500">Cuentos de Lucas</p>
-                <h1 className="mt-3 text-4xl font-heading leading-tight text-slate-900 sm:text-5xl">
+                <p className="text-xs font-semibold uppercase tracking-widest text-slate-600 dark:text-slate-400">Cuentos de Lucas</p>
+                <h1 className="mt-3 text-4xl font-heading text-slate-900 dark:text-slate-100 sm:text-5xl">
                   Una experiencia dulce para escuchar antes de dormir
                 </h1>
               </div>
 
               <div className="relative">
-                <div className="absolute -left-3 top-8 h-16 w-16 rounded-full bg-white/60 blur-xl" />
-                <div className="absolute -right-1 bottom-4 h-20 w-20 rounded-full bg-rose-200/50 blur-2xl" />
                 <img
                   src="/images/header.png"
                   alt="Ilustración principal de cuentos de dinosaurios"
                   className="relative mx-auto w-full max-w-xs rounded-[32px] object-contain"
+                  loading="eager"
                 />
               </div>
             </div>
@@ -753,7 +753,7 @@ function App() {
 
         <div className="mt-4 flex-1">{renderStepContent()}</div>
 
-        <footer className="pb-8 pt-6 text-center text-sm text-slate-500">
+        <footer className="pb-8 pt-6 text-center text-sm text-slate-500 dark:text-slate-400">
           Hecho con cariño para Lucas
         </footer>
       </main>
@@ -761,13 +761,13 @@ function App() {
       {renderBottomActionBar()}
 
       {loadingMessage && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/35 px-4 backdrop-blur-md">
-          <div className="w-full max-w-sm rounded-[32px] bg-white/90 p-8 text-center shadow-soft-xl">
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] bg-gradient-to-br from-sky-100 via-rose-50 to-amber-100">
-              <Sparkles className="animate-gentle-float text-sky-700" size={34} />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/35 px-4" role="alert" aria-live="polite" aria-busy="true">
+          <div className="w-full max-w-sm rounded-[32px] bg-white/90 p-8 text-center shadow-soft-xl dark:bg-slate-800/90">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-[28px] bg-sky-100 dark:bg-sky-900/50">
+              <Sparkles className="animate-gentle-float text-sky-700 dark:text-sky-300" size={34} aria-hidden="true" />
             </div>
-            <h3 className="mt-5 text-2xl font-heading text-slate-900">Preparando la narración</h3>
-            <p className="mt-3 text-sm leading-6 text-slate-600">{loadingMessage}</p>
+            <h3 className="mt-5 text-2xl font-heading text-slate-900 dark:text-slate-100">Preparando la narración</h3>
+            <p className="mt-3 text-base leading-relaxed text-slate-600 dark:text-slate-400">{loadingMessage}</p>
           </div>
         </div>
       )}
