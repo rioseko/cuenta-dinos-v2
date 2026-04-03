@@ -630,7 +630,9 @@ function App() {
           </div>
         </div>
 
-        <SelectionSummary selectedDino={selectedDino} selectedStyle={selectedStyle} selectedLesson={selectedLesson} />
+        <div className="mt-2">
+          <SelectionSummary selectedDino={selectedDino} selectedStyle={selectedStyle} selectedLesson={selectedLesson} />
+        </div>
 
         <div className="grid gap-4">
           <button
